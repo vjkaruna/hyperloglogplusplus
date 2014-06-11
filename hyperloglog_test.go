@@ -56,10 +56,10 @@ func testHyperLogLog(t *testing.T, n, low_b, high_b int) {
 			t.Fatalf("can't make New(%d): %v", m, err)
 		}
 
-		hash := fnv.New32()
+		hash := fnv.New64()
 		for _, word := range words {
 			hash.Write([]byte(word))
-			h.Add(hash.Sum32())
+			h.Add(hash.Sum64())
 			hash.Reset()
 		}
 
@@ -93,10 +93,10 @@ func benchmarkCount(b *testing.B, registers int) {
 		return
 	}
 
-	hash := fnv.New32()
+	hash := fnv.New64()
 	for _, word := range words {
 		hash.Write([]byte(word))
-		h.Add(hash.Sum32())
+		h.Add(hash.Sum64())
 		hash.Reset()
 	}
 

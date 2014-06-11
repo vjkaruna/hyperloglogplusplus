@@ -68,19 +68,19 @@ func (h *HyperLogLog) Reset() {
 }
 
 // Calculate the position of the leftmost 1-bit.
-func rho(val uint32, max uint32) uint8 {
+func rho(val uint64, max uint32) uint8 {
 	r := uint32(1)
-	for val&0x80000000 == 0 && r <= max {
+	for val&0x8000000000000000 == 0 && r <= max {
 		r++
 		val <<= 1
 	}
 	return uint8(r)
 }
 
-// Add to the count. val should be a 32 bit unsigned integer from a
-// good hash function.
-func (h *HyperLogLog) Add(val uint32) {
-	k := 32 - h.b
+// Add to the count. val should be a 64 bit unsigned integer from a
+// good hash function, such as FNV 64-bit.
+func (h *HyperLogLog) Add(val uint64) {
+	k := 64 - h.b
 	r := rho(val<<h.b, k)
 	j := val >> uint(k)
 	if r > h.registers[j] {
@@ -96,6 +96,7 @@ func (h *HyperLogLog) Count() uint64 {
 		sum += 1.0 / math.Pow(2.0, float64(val))
 	}
 	estimate := h.alpha * m * m / sum
+        // TODO - use different LinearCounting determination from paper
 	if estimate <= 5.0/2.0*m {
 		// Small range correction
 		v := 0
@@ -108,8 +109,8 @@ func (h *HyperLogLog) Count() uint64 {
 			estimate = m * math.Log(m/float64(v))
 		}
 	} else if estimate > 1.0/30.0*exp32 {
-		// Large range correction
-		estimate = -exp32 * math.Log(1-estimate/exp32)
+		// Large range correction - no longer needed due to 64-bit hash
+		// estimate = -exp32 * math.Log(1-estimate/exp32)
 	}
 	return uint64(estimate)
 }
